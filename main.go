@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
-	counter int
+	target []string
+	input  []string
 }
 
 func (m model) Init() tea.Cmd {
@@ -26,7 +28,7 @@ func main() {
 
 func initialModel() model {
 	return model{
-		counter: 0,
+		target: []string{"hello", "world", "it's", "me", "mario"},
 	}
 }
 
@@ -38,10 +40,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		switch k {
-		case "up":
-			m.counter++
-		case "down":
-			m.counter--
+		case "backspace":
+			if len(m.input) > 0 {
+				m.input = m.input[:len(m.input)-1]
+			}
+		case " ":
+			m.input = append(m.input, "_")
+		default:
+			m.input = append(m.input, k)
 		}
 	}
 
@@ -49,5 +55,5 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return fmt.Sprintf("Counter: %d", m.counter)
+	return fmt.Sprintf("Target: %s\nInput: %s", strings.Join(m.target, "_"), strings.Join(m.input, ""))
 }
