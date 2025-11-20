@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -13,7 +14,28 @@ type model struct {
 	input       []string
 	commandMode bool
 	command     string
+
+	width  int
+	height int
 }
+
+var (
+	appBorder = lipgloss.Border{
+		Top:         "─",
+		Bottom:      "─",
+		Left:        "│",
+		Right:       "│",
+		TopLeft:     "╭",
+		TopRight:    "╮",
+		BottomLeft:  "╰",
+		BottomRight: "╯",
+	}
+
+	appStyle = lipgloss.NewStyle().
+			Border(appBorder).
+			BorderForeground(lipgloss.Color("12")).
+			Padding(1, 3)
+)
 
 func (m model) Init() tea.Cmd {
 	// Just return `nil`, which means "no I/O right now, please."
@@ -35,11 +57,14 @@ func initialModel() model {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if msg, ok := msg.(tea.KeyMsg); ok {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
+
+	case tea.KeyMsg:
 		k := msg.String()
-		if k == "ctrl+c" {
-			return m, tea.Quit
-		}
 
 		if m.commandMode {
 			switch k {
@@ -86,5 +111,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return fmt.Sprintf("Target: %s\nInput: %s\nCommand: :%s", strings.Join(m.target, "_"), strings.Join(m.input, ""), m.command)
+	content := fmt.Sprintf("Target: %s\nInput: %s\nCommand: :%s", strings.Join(m.target, "_"), strings.Join(m.input, ""), m.command)
+
+	box := appStyle.Render(content)
+
+	if m.width == 0 || m.height == 0 {
+		return box
+	}
+
+	return lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		box,
+	)
 }
