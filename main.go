@@ -9,8 +9,10 @@ import (
 )
 
 type model struct {
-	target []string
-	input  []string
+	target      []string
+	input       []string
+	commandMode bool
+	command     string
 }
 
 func (m model) Init() tea.Cmd {
@@ -39,7 +41,36 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
+		if m.commandMode {
+			switch k {
+			case "enter":
+				if m.command == "q" {
+					return m, tea.Quit
+				}
+				m.commandMode = false
+				m.command = ""
+				return m, nil
+			case "esc":
+				m.commandMode = false
+				m.command = ""
+				return m, nil
+			case "backspace":
+				if len(m.command) > 0 {
+					m.command = m.command[:len(m.command)-1]
+				}
+				return m, nil
+			default:
+				if len(k) == 1 {
+					m.command += k
+				}
+				return m, nil
+			}
+		}
+
 		switch k {
+		case ":":
+			m.commandMode = true
+			m.command = ""
 		case "backspace":
 			if len(m.input) > 0 {
 				m.input = m.input[:len(m.input)-1]
@@ -55,5 +86,5 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return fmt.Sprintf("Target: %s\nInput: %s", strings.Join(m.target, "_"), strings.Join(m.input, ""))
+	return fmt.Sprintf("Target: %s\nInput: %s\nCommand: :%s", strings.Join(m.target, "_"), strings.Join(m.input, ""), m.command)
 }
