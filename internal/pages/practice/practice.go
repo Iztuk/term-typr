@@ -8,8 +8,9 @@ import (
 )
 
 type PracticeModel struct {
-	TargetText []string
-	Input      string
+	TargetText   []string
+	Input        []string
+	CurrentIndex int
 }
 
 func InitialPracticeModel() PracticeModel {
@@ -21,7 +22,17 @@ func InitialPracticeModel() PracticeModel {
 func (m PracticeModel) Update(msg tea.Msg) (PracticeModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		m.Input += msg.String()
+		k := msg.String()
+		switch k {
+		case "backspace":
+			if m.CurrentIndex != 0 {
+				m.Input = m.Input[:len(m.Input)-1]
+				m.CurrentIndex--
+			}
+		default:
+			m.Input = append(m.Input, k)
+			m.CurrentIndex++
+		}
 	}
 	return m, nil
 }
