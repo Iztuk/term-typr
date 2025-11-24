@@ -47,7 +47,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		if m.commandMode {
+		if m.commandMode && !m.practice.ActiveTest {
 			switch k {
 			case "enter":
 				if m.command == "q" {
@@ -81,10 +81,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		switch k {
-		case ":":
-			m.commandMode = true
-			m.command = ""
+		if k == ":" && m.currentPage == "practice" && m.practice.ActiveTest {
+		} else {
+			switch k {
+			case ":":
+				m.commandMode = true
+				m.command = ""
+			}
 		}
 	}
 
@@ -111,6 +114,12 @@ func (m AppModel) View() string {
 		content = m.menu.View()
 	case "practice":
 		content = m.practice.View()
+
+		targetTextStyle := lipgloss.NewStyle().
+			Width(m.width - 15).
+			AlignHorizontal(lipgloss.Center)
+
+		content = targetTextStyle.Render(content)
 	default:
 		content = m.menu.View()
 
