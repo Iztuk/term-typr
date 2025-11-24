@@ -24,7 +24,7 @@ var (
 func createSessionText() []Glyph {
 	var sessionText []Glyph
 
-	for _ = range 100 {
+	for _ = range 5 {
 		var text = Glyph{
 			Char:  lowerCaseLetters[rand.Intn(25)],
 			State: 0,
@@ -33,6 +33,26 @@ func createSessionText() []Glyph {
 	}
 
 	return sessionText
+}
+
+// Returns the current session with empty input and Glyph states back to pending
+func RestartSessionText(curr PracticeModel) PracticeModel {
+	var g []Glyph
+
+	for _, t := range curr.TargetText {
+		var c Glyph
+
+		c = Glyph{
+			Char:  t.Char,
+			State: 0,
+		}
+
+		g = append(g, c)
+	}
+
+	return PracticeModel{
+		TargetText: g,
+	}
 }
 
 // Compares Input vs Target, returns the changed Glyph state (correct or wrong)

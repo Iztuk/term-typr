@@ -50,9 +50,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.commandMode && !m.practice.ActiveTest {
 			switch k {
 			case "enter":
-				if m.command == "q" {
-					return m, tea.Quit
-				}
+				// Cases for page navigation commands
 				switch m.command {
 				case "q":
 					return m, tea.Quit
@@ -61,6 +59,19 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case "p", "practice":
 					m.currentPage = "practice"
 				}
+
+				// Cases for practice commands
+				if m.currentPage == "practice" {
+					switch m.command {
+					// Restarts the same test
+					case "r":
+						m.practice = practice.RestartSessionText(m.practice)
+					// Creates a new test
+					case "t":
+						m.practice = practice.InitialPracticeModel()
+					}
+				}
+
 				m.commandMode = false
 				m.command = ""
 				return m, nil
