@@ -64,10 +64,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.currentPage == "practice" {
 					switch m.command {
 					// Restarts the same test
-					case "r":
+					case "r", "restart":
 						m.practice = practice.RestartSessionText(m.practice)
 					// Creates a new test
-					case "t":
+					case "t", "test":
 						m.practice = practice.InitialPracticeModel()
 					}
 				}
