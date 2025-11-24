@@ -14,8 +14,6 @@ type AppModel struct {
 	menu     menu.MenuModel
 	practice practice.PracticeModel
 
-	target      []string
-	input       []string
 	commandMode bool
 	command     string
 

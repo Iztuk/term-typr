@@ -3,6 +3,7 @@ package practice
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -10,12 +11,16 @@ import (
 
 type PracticeModel struct {
 	TargetText   []Glyph
-	Input        []string
+	CurrentInput []string
 	CurrentIndex int
+	TotalInput   []string
+	TotalTime    time.Time
 
 	ActiveTest bool
+	StopWatch  StopWatch
 }
 
+// Styles
 var (
 	correctStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("82"))
@@ -37,13 +42,14 @@ func (m PracticeModel) Update(msg tea.Msg) (PracticeModel, tea.Cmd) {
 		// Conditional to start test with any other key other than ":"
 		if len(k) == 1 && !m.ActiveTest && k != ":" {
 			m.ActiveTest = true
+			m.StopWatch.Start()
 		}
 		if m.ActiveTest {
 			switch k {
 			case "backspace":
 				if m.CurrentIndex != 0 {
 					m.CurrentIndex--
-					m.Input = m.Input[:len(m.Input)-1]
+					m.CurrentInput = m.CurrentInput[:len(m.CurrentInput)-1]
 
 					m.TargetText[m.CurrentIndex].State = 0
 				}
@@ -57,7 +63,8 @@ func (m PracticeModel) Update(msg tea.Msg) (PracticeModel, tea.Cmd) {
 					return m, nil
 				}
 
-				m.Input = append(m.Input, k)
+				m.CurrentInput = append(m.CurrentInput, k)
+				m.TotalInput = append(m.TotalInput, k)
 
 				m.TargetText[m.CurrentIndex] = evaluateInput(k, m.TargetText[m.CurrentIndex])
 
@@ -65,6 +72,7 @@ func (m PracticeModel) Update(msg tea.Msg) (PracticeModel, tea.Cmd) {
 
 				if m.CurrentIndex >= len(m.TargetText) {
 					m.ActiveTest = false
+					m.StopWatch.Stop()
 				}
 			}
 		}
@@ -77,8 +85,8 @@ func (m PracticeModel) View() string {
 
 	if m.CurrentIndex == len(m.TargetText) {
 		b.WriteString("Done! ")
-		at := fmt.Sprintf("\nActive Test: %t", m.ActiveTest)
-		b.WriteString(at)
+		wpm := fmt.Sprintf("\nRaw WPM: %d WPM: %d Accuracy: %.2f", evaluateRawWPM(m.TotalInput, m.StopWatch.elapsed), evaluateWPM(m.TargetText, m.StopWatch.elapsed), evaluateAccuracy(m.TargetText, m.TotalInput))
+		b.WriteString(wpm)
 		return b.String()
 	}
 
