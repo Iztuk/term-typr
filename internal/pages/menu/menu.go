@@ -52,7 +52,7 @@ func (m MenuModel) View() string {
 		),
 		lipgloss.JoinHorizontal(
 			lipgloss.Left,
-			hintKeyStyle.Render(":practice"),
+			hintKeyStyle.Render(":p"),
 			lipgloss.NewStyle().Render("  "),
 			hintTextStyle.Render("Start typing practice"),
 		),

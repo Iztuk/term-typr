@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/NimbleMarkets/ntcharts/linechart"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -18,15 +19,34 @@ type PracticeModel struct {
 
 	ActiveTest bool
 	StopWatch  StopWatch
+
+	StatsChart linechart.Model
 }
 
 // Styles
 var (
+	// Input coloring styles
 	correctStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("82"))
 	wrongStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("203"))
+
+	// Session stats styles
+	defaultStyle = lipgloss.NewStyle().
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("63")) // purple
+	lineStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("4")) // blue
+	labelStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("6")) // cyan
+
 )
+
+var replacedStyle = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("5")) // pink
+
+var axisStyle = lipgloss.NewStyle().
+	Foreground(lipgloss.Color("3")) // yellow
 
 func InitialPracticeModel() PracticeModel {
 	return PracticeModel{
@@ -73,6 +93,7 @@ func (m PracticeModel) Update(msg tea.Msg) (PracticeModel, tea.Cmd) {
 				if m.CurrentIndex >= len(m.TargetText) {
 					m.ActiveTest = false
 					m.StopWatch.Stop()
+					m.StatsChart = generateSessionStatsChart()
 				}
 			}
 		}
@@ -83,10 +104,16 @@ func (m PracticeModel) Update(msg tea.Msg) (PracticeModel, tea.Cmd) {
 func (m PracticeModel) View() string {
 	var b strings.Builder
 
-	if m.CurrentIndex == len(m.TargetText) {
-		b.WriteString("Done! ")
-		wpm := fmt.Sprintf("\nRaw WPM: %d WPM: %d Accuracy: %.2f", evaluateRawWPM(m.TotalInput, m.StopWatch.elapsed), evaluateWPM(m.TargetText, m.StopWatch.elapsed), evaluateAccuracy(m.TargetText, m.TotalInput))
+	if m.CurrentIndex >= len(m.TargetText) {
+		wpm := fmt.Sprintf("Raw WPM: %d WPM: %d Accuracy: %.2f\n", evaluateRawWPM(m.TotalInput, m.StopWatch.elapsed), evaluateWPM(m.TargetText, m.StopWatch.elapsed), evaluateAccuracy(m.TargetText, m.TotalInput))
 		b.WriteString(wpm)
+		b.WriteString("\n:r to restart and :t for a new test\n\n")
+
+		s := "any key to draw randomized line, `r` to reset, `q/ctrl+c` to quit\n"
+		s += lipgloss.JoinHorizontal(lipgloss.Top,
+			defaultStyle.Render("DrawBrailleLine()\n"+m.StatsChart.View()),
+		) + "\n"
+		b.WriteString(s)
 		return b.String()
 	}
 
